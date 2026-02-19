@@ -1,0 +1,525 @@
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Luminary — Quote of the Day</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Cinzel:wght@400;600&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --ink: #0f0d0a; --parchment: #f5f0e8; --gold: #c9a84c;
+    --gold-light: #e8d08a; --cream: #faf7f2; --warm-gray: #8a8278; --deep: #1a1712;
+  }
+  html, body { height: 100%; background: var(--cream); color: var(--ink); font-family: 'Cormorant Garamond', Georgia, serif; overflow-x: hidden; cursor: none; }
+  .cursor { width: 8px; height: 8px; background: var(--gold); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999; transform: translate(-50%,-50%); transition: transform 0.1s ease; }
+  .cursor-ring { width: 32px; height: 32px; border: 1px solid var(--gold); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9998; transform: translate(-50%,-50%); transition: all 0.15s ease; opacity: 0.6; }
+  body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events: none; z-index: 100; opacity: 0.5; }
+  .page { min-height: 100vh; display: grid; grid-template-rows: auto 1fr auto; position: relative; }
+  .corner { position: fixed; width: 80px; height: 80px; pointer-events: none; z-index: 50; opacity: 0; animation: fadeIn 1.5s 0.3s forwards; }
+  .corner--tl { top: 24px; left: 24px; border-top: 1px solid var(--gold); border-left: 1px solid var(--gold); }
+  .corner--tr { top: 24px; right: 24px; border-top: 1px solid var(--gold); border-right: 1px solid var(--gold); }
+  .corner--bl { bottom: 24px; left: 24px; border-bottom: 1px solid var(--gold); border-left: 1px solid var(--gold); }
+  .corner--br { bottom: 24px; right: 24px; border-bottom: 1px solid var(--gold); border-right: 1px solid var(--gold); }
+  header { display: flex; justify-content: space-between; align-items: flex-end; padding: 48px 64px 24px; opacity: 0; animation: slideDown 1s 0.5s forwards; }
+  .brand { font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 0.4em; text-transform: uppercase; color: var(--gold); }
+  .header-right { display: flex; align-items: center; gap: 24px; }
+  .date-display { font-family: 'Jost', sans-serif; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--warm-gray); font-weight: 200; }
+
+  /* Search in header */
+  .search-bar { display: flex; align-items: center; gap: 10px; position: relative; }
+  .search-input-wrap { width: 0; overflow: hidden; transition: width 0.4s cubic-bezier(0.22,1,0.36,1); }
+  .search-input-wrap.open { width: 200px; }
+  .search-input { width: 100%; background: none; border: none; border-bottom: 1px solid var(--gold); outline: none; font-family: 'Jost', sans-serif; font-size: 11px; letter-spacing: 0.15em; color: var(--ink); font-weight: 300; padding: 4px 0; cursor: text; }
+  .search-input::placeholder { color: var(--warm-gray); }
+  .search-toggle-btn { background: none; border: none; cursor: none; opacity: 0.7; transition: opacity 0.3s; display: flex; align-items: center; }
+  .search-toggle-btn:hover { opacity: 1; }
+  .search-toggle-btn svg { width: 14px; height: 14px; stroke: var(--gold); stroke-width: 1.5; fill: none; }
+
+  /* Search results overlay */
+  .search-overlay { position: fixed; inset: 0; background: rgba(250,247,242,0.98); z-index: 400; display: none; flex-direction: column; padding: 80px 64px; overflow-y: auto; }
+  .search-overlay.open { display: flex; }
+  .search-overlay-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .search-overlay-title { font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 0.4em; text-transform: uppercase; color: var(--gold); }
+  .search-close-btn { background: none; border: none; cursor: none; font-family: 'Jost', sans-serif; font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--warm-gray); transition: color 0.3s; font-weight: 300; }
+  .search-close-btn:hover { color: var(--ink); }
+  .search-query-info { font-family: 'Jost', sans-serif; font-size: 10px; letter-spacing: 0.2em; color: var(--warm-gray); font-weight: 200; margin-bottom: 40px; text-transform: uppercase; }
+  .search-results-list { display: flex; flex-direction: column; }
+  .search-result-item { padding: 28px 0; border-bottom: 1px solid rgba(201,168,76,0.2); cursor: none; transition: padding-left 0.3s ease; display: grid; grid-template-columns: 1fr auto; gap: 32px; align-items: center; }
+  .search-result-item:hover { padding-left: 16px; }
+  .result-text { font-size: clamp(1rem, 2vw, 1.25rem); font-style: italic; font-weight: 300; line-height: 1.65; color: var(--ink); }
+  mark { background: rgba(201,168,76,0.25); border-radius: 2px; font-style: italic; color: inherit; }
+  .result-meta { text-align: right; min-width: 140px; }
+  .result-author { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--ink); display: block; }
+  .result-category { font-family: 'Jost', sans-serif; font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); font-weight: 300; margin-top: 4px; display: block; }
+  .no-results { font-family: 'Jost', sans-serif; font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--warm-gray); font-weight: 200; text-align: center; margin-top: 80px; }
+
+  /* Favorites panel */
+  .fav-overlay { position: fixed; inset: 0; background: rgba(15,13,10,0.2); z-index: 299; opacity: 0; pointer-events: none; transition: opacity 0.4s; }
+  .fav-overlay.open { opacity: 1; pointer-events: all; cursor: none; }
+  .fav-panel { position: fixed; top: 0; right: 0; bottom: 0; width: 360px; background: var(--parchment); z-index: 300; transform: translateX(100%); transition: transform 0.5s cubic-bezier(0.22,1,0.36,1); display: flex; flex-direction: column; box-shadow: -4px 0 40px rgba(15,13,10,0.08); }
+  .fav-panel.open { transform: translateX(0); }
+  .fav-panel-header { padding: 40px 32px 24px; border-bottom: 1px solid rgba(201,168,76,0.3); display: flex; justify-content: space-between; align-items: flex-end; }
+  .fav-panel-title { font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 0.4em; text-transform: uppercase; color: var(--gold); }
+  .fav-close-btn { background: none; border: none; cursor: none; font-family: 'Jost', sans-serif; font-size: 9px; letter-spacing: 0.35em; text-transform: uppercase; color: var(--warm-gray); transition: color 0.3s; }
+  .fav-close-btn:hover { color: var(--ink); }
+  .fav-list { flex: 1; overflow-y: auto; padding: 8px 0; }
+  .fav-empty { padding: 48px 32px; font-family: 'Jost', sans-serif; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--warm-gray); font-weight: 200; text-align: center; }
+  .fav-item { padding: 20px 32px; border-bottom: 1px solid rgba(201,168,76,0.15); position: relative; transition: background 0.2s; }
+  .fav-item:hover { background: rgba(201,168,76,0.06); }
+  .fav-item-text { font-style: italic; font-weight: 300; font-size: 0.95rem; line-height: 1.6; color: var(--ink); margin-bottom: 8px; }
+  .fav-item-author { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--warm-gray); }
+  .fav-item-actions { display: flex; gap: 16px; margin-top: 10px; }
+  .fav-go-btn { background: none; border: none; cursor: none; font-family: 'Jost', sans-serif; font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); font-weight: 300; transition: opacity 0.2s; opacity: 0.8; }
+  .fav-go-btn:hover { opacity: 1; }
+  .fav-remove-btn { background: none; border: none; cursor: none; font-family: 'Jost', sans-serif; font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--warm-gray); font-weight: 300; transition: color 0.2s; }
+  .fav-remove-btn:hover { color: var(--ink); }
+
+  .rule { display: block; height: 1px; background: linear-gradient(to right, transparent, var(--gold) 30%, var(--gold) 70%, transparent); margin: 0 64px; opacity: 0; animation: fadeIn 1s 0.8s forwards; }
+  main { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 64px; position: relative; }
+  .category-label { font-family: 'Jost', sans-serif; font-size: 10px; letter-spacing: 0.5em; text-transform: uppercase; color: var(--gold); font-weight: 300; margin-bottom: 48px; opacity: 0; animation: fadeIn 1s 1s forwards; }
+  .quote-container { max-width: 760px; text-align: center; position: relative; opacity: 0; animation: riseUp 1.2s 1.1s cubic-bezier(0.22,1,0.36,1) forwards; }
+  .ornament { font-size: 80px; line-height: 0.5; color: var(--gold-light); opacity: 0.4; font-family: 'Cormorant Garamond', serif; display: block; margin-bottom: 24px; user-select: none; }
+  .quote-text { font-size: clamp(1.8rem, 3.5vw, 2.8rem); line-height: 1.55; font-weight: 300; font-style: italic; color: var(--ink); letter-spacing: 0.01em; }
+  .quote-text span { background: linear-gradient(135deg, var(--ink) 0%, #3d3830 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .divider-small { display: flex; align-items: center; gap: 16px; margin: 40px auto; width: fit-content; }
+  .divider-small::before, .divider-small::after { content: ''; width: 60px; height: 1px; background: var(--gold); opacity: 0.5; }
+  .divider-small .diamond { width: 6px; height: 6px; background: var(--gold); transform: rotate(45deg); flex-shrink: 0; }
+  .author-block { margin-top: 4px; }
+  .author-name { font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--ink); display: block; }
+  .author-title { font-family: 'Jost', sans-serif; font-size: 11px; letter-spacing: 0.2em; color: var(--warm-gray); font-weight: 200; margin-top: 6px; display: block; text-transform: uppercase; }
+  .controls { display: flex; align-items: center; gap: 32px; margin-top: 64px; opacity: 0; animation: fadeIn 1s 1.5s forwards; }
+  .btn { background: none; border: none; cursor: none; display: flex; flex-direction: column; align-items: center; gap: 10px; transition: opacity 0.3s; opacity: 0.7; }
+  .btn:hover { opacity: 1; }
+  .btn-icon { width: 48px; height: 48px; border: 1px solid var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; position: relative; overflow: hidden; }
+  .btn-icon::before { content: ''; position: absolute; inset: 0; background: var(--gold); border-radius: 50%; transform: scale(0); transition: transform 0.3s ease; }
+  .btn:hover .btn-icon::before { transform: scale(1); }
+  .btn:hover .btn-icon svg { stroke: var(--cream); position: relative; z-index: 1; }
+  .btn-icon svg { width: 16px; height: 16px; stroke: var(--gold); stroke-width: 1.5; fill: none; transition: stroke 0.3s; position: relative; z-index: 1; }
+  .btn-label { font-family: 'Jost', sans-serif; font-size: 9px; letter-spacing: 0.35em; text-transform: uppercase; color: var(--warm-gray); font-weight: 300; }
+  .btn-main { background: none; border: 1px solid var(--ink); padding: 14px 40px; font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 0.35em; text-transform: uppercase; cursor: none; color: var(--ink); transition: all 0.3s ease; position: relative; overflow: hidden; }
+  .btn-main::before { content: ''; position: absolute; inset: 0; background: var(--ink); transform: translateX(-100%); transition: transform 0.35s ease; }
+  .btn-main:hover::before { transform: translateX(0); }
+  .btn-main:hover { color: var(--cream); }
+  .btn-main span { position: relative; z-index: 1; }
+  .categories { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 48px; opacity: 0; animation: fadeIn 1s 1.8s forwards; }
+  .cat-pill { font-family: 'Jost', sans-serif; font-size: 9px; letter-spacing: 0.35em; text-transform: uppercase; color: var(--warm-gray); font-weight: 300; border: 1px solid rgba(138,130,120,0.3); padding: 6px 16px; cursor: none; transition: all 0.3s; background: transparent; }
+  .cat-pill:hover, .cat-pill.active { border-color: var(--gold); color: var(--gold); }
+  footer { padding: 24px 64px 48px; display: flex; justify-content: center; opacity: 0; animation: fadeIn 1s 2s forwards; }
+  .footer-text { font-family: 'Jost', sans-serif; font-size: 10px; letter-spacing: 0.25em; color: var(--warm-gray); font-weight: 200; text-transform: uppercase; }
+  .quote-counter { position: fixed; right: 64px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; opacity: 0; animation: fadeIn 1s 2s forwards; }
+  .counter-num { font-family: 'Cormorant Garamond', serif; font-size: 11px; letter-spacing: 0.2em; color: var(--warm-gray); writing-mode: vertical-rl; }
+  .counter-line { width: 1px; height: 60px; background: linear-gradient(to bottom, var(--gold), transparent); }
+  .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: var(--cream); font-family: 'Jost', sans-serif; font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; padding: 12px 24px; opacity: 0; transition: all 0.4s ease; pointer-events: none; white-space: nowrap; z-index: 500; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  /* heart saved state */
+  .heart-saved { fill: var(--gold) !important; stroke: var(--gold) !important; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes riseUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+  @media (max-width: 768px) {
+    header { padding: 32px 32px 20px; }
+    .rule { margin: 0 32px; }
+    main { padding: 60px 32px; }
+    footer { padding: 20px 32px 40px; }
+    .corner, .quote-counter { display: none; }
+    .btn-main { padding: 12px 28px; }
+    .search-overlay { padding: 48px 24px; }
+    .fav-panel { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+<div class="corner corner--tl"></div>
+<div class="corner corner--tr"></div>
+<div class="corner corner--bl"></div>
+<div class="corner corner--br"></div>
+<div class="toast" id="toast"></div>
+
+<!-- Search overlay -->
+<div class="search-overlay" id="searchOverlay">
+  <div class="search-overlay-header">
+    <span class="search-overlay-title">Search Quotes</span>
+    <button class="search-close-btn" onclick="closeSearch()">Close</button>
+  </div>
+  <div class="search-query-info" id="searchQueryInfo"></div>
+  <div class="search-results-list" id="searchResultsList"></div>
+</div>
+
+<!-- Favorites overlay + panel -->
+<div class="fav-overlay" id="favOverlay" onclick="closeFavPanel()"></div>
+<div class="fav-panel" id="favPanel">
+  <div class="fav-panel-header">
+    <div>
+      <div class="fav-panel-title">Saved Quotes</div>
+    </div>
+    <button class="fav-close-btn" onclick="closeFavPanel()">Close</button>
+  </div>
+  <div class="fav-list" id="favList"></div>
+</div>
+
+<div class="page">
+  <header>
+    <div class="brand">Luminary</div>
+    <div class="header-right">
+      <!-- Search bar -->
+      <div class="search-bar">
+        <div class="search-input-wrap" id="searchInputWrap">
+          <input class="search-input" id="searchInput" type="text" placeholder="Search quotes..." autocomplete="off">
+        </div>
+        <button class="search-toggle-btn" id="searchToggleBtn" onclick="toggleSearch()" title="Search">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        </button>
+      </div>
+      <!-- Favorites button -->
+      <button class="search-toggle-btn" onclick="openFavPanel()" title="Saved quotes" style="opacity:0.7;transition:opacity 0.3s;" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0.7">
+        <svg viewBox="0 0 24 24" width="14" height="14" style="stroke:var(--gold);stroke-width:1.5;fill:none;"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+      </button>
+      <div class="date-display" id="dateDisplay"></div>
+    </div>
+  </header>
+
+  <span class="rule"></span>
+
+  <main>
+    <div class="category-label" id="categoryLabel">Wisdom</div>
+    <div class="quote-container" id="quoteContainer">
+      <span class="ornament">"</span>
+      <p class="quote-text"><span id="quoteSpan"></span></p>
+      <div class="divider-small"><div class="diamond"></div></div>
+      <div class="author-block">
+        <span class="author-name" id="authorName"></span>
+        <span class="author-title" id="authorTitle"></span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn" onclick="copyQuote()" title="Copy">
+        <div class="btn-icon">
+          <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        </div>
+        <span class="btn-label">Copy</span>
+      </button>
+      <button class="btn-main" onclick="nextQuote()"><span>Next Quote</span></button>
+      <button class="btn" onclick="toggleFavorite()" title="Save" id="favBtn">
+        <div class="btn-icon">
+          <svg id="heartIcon" viewBox="0 0 24 24" style="stroke:var(--gold);fill:none;transition:fill 0.3s,stroke 0.3s;"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        </div>
+        <span class="btn-label" id="favLabel">Save</span>
+      </button>
+    </div>
+
+    <div class="categories" id="categoriesEl"></div>
+  </main>
+
+  <footer>
+    <p class="footer-text">A new perspective, every day</p>
+  </footer>
+</div>
+
+<div class="quote-counter">
+  <span class="counter-num" id="counterNum">01 / 20</span>
+  <div class="counter-line"></div>
+</div>
+
+<script>
+  // -- Custom cursor ----------------------------------------------------------
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cursor.style.left = mx + 'px'; cursor.style.top = my + 'px';
+  });
+  (function animateRing() {
+    rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12;
+    ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+    requestAnimationFrame(animateRing);
+  })();
+
+  // -- Date ------------------------------------------------------------------
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const now = new Date();
+  document.getElementById('dateDisplay').textContent =
+    `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+
+  // -- Quotes data -----------------------------------------------------------
+  const quotes = [
+    { text: "The only way to do great work is to love what you do.", author: "Steve Jobs", title: "Co-founder, Apple", category: "Purpose" },
+    { text: "In the middle of difficulty lies opportunity.", author: "Albert Einstein", title: "Theoretical Physicist", category: "Resilience" },
+    { text: "It does not matter how slowly you go as long as you do not stop.", author: "Confucius", title: "Chinese Philosopher", category: "Perseverance" },
+    { text: "Life is what happens when you're busy making other plans.", author: "John Lennon", title: "Musician & Peace Activist", category: "Life" },
+    { text: "The future belongs to those who believe in the beauty of their dreams.", author: "Eleanor Roosevelt", title: "Former First Lady of the United States", category: "Dreams" },
+    { text: "Strive not to be a success, but rather to be of value.", author: "Albert Einstein", title: "Theoretical Physicist", category: "Purpose" },
+    { text: "You miss 100% of the shots you don't take.", author: "Wayne Gretzky", title: "Ice Hockey Legend", category: "Courage" },
+    { text: "Whether you think you can or you think you can't, you're right.", author: "Henry Ford", title: "Founder, Ford Motor Company", category: "Mindset" },
+    { text: "The two most important days in your life are the day you are born and the day you find out why.", author: "Mark Twain", title: "Author & Humorist", category: "Purpose" },
+    { text: "Spread love everywhere you go. Let no one ever come to you without leaving happier.", author: "Mother Teresa", title: "Saint & Humanitarian", category: "Kindness" },
+    { text: "When you reach the end of your rope, tie a knot in it and hang on.", author: "Franklin D. Roosevelt", title: "32nd President of the United States", category: "Resilience" },
+    { text: "Always remember that you are absolutely unique, just like everyone else.", author: "Margaret Mead", title: "Cultural Anthropologist", category: "Identity" },
+    { text: "Do not go where the path may lead, go instead where there is no path and leave a trail.", author: "Ralph Waldo Emerson", title: "Philosopher & Poet", category: "Courage" },
+    { text: "You will face many defeats in life, but never let yourself be defeated.", author: "Maya Angelou", title: "Poet & Civil Rights Activist", category: "Resilience" },
+    { text: "In the end, it's not the years in your life that count. It's the life in your years.", author: "Abraham Lincoln", title: "16th President of the United States", category: "Life" },
+    { text: "Never let the fear of striking out keep you from playing the game.", author: "Babe Ruth", title: "Baseball Legend", category: "Courage" },
+    { text: "The mind is everything. What you think you become.", author: "Buddha", title: "Spiritual Teacher", category: "Mindset" },
+    { text: "An unexamined life is not worth living.", author: "Socrates", title: "Ancient Greek Philosopher", category: "Wisdom" },
+    { text: "Spread your wings and let the fairy in you fly!", author: "Rumi", title: "13th Century Sufi Mystic & Poet", category: "Dreams" },
+    { text: "It is never too late to be what you might have been.", author: "George Eliot", title: "Victorian Era Novelist", category: "Growth" },
+  ];
+
+  // -- FIX 1: Day-of-year quote (was using divison including current day wrongly) --
+  // Correct: count full days elapsed since Jan 1, zero-indexed
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const dayOfYear = Math.floor((now - startOfYear) / 86400000); // 0-indexed, no off-by-one
+  const categories = [...new Set(quotes.map(q => q.category))];
+  let currentIndex = dayOfYear % quotes.length;
+  let activeCategory = null;
+  let filteredQuotes = [...quotes];
+
+  // -- FIX 2: Persist favorites in localStorage -------------------------------
+  function getFavorites() {
+    try { return JSON.parse(localStorage.getItem('luminary_favorites') || '[]'); }
+    catch { return []; }
+  }
+  function setFavorites(favs) {
+    try { localStorage.setItem('luminary_favorites', JSON.stringify(favs)); }
+    catch {}
+  }
+  function isFavorite(quoteText) {
+    return getFavorites().some(f => f.text === quoteText);
+  }
+  function addFavorite(q) {
+    const favs = getFavorites();
+    if (!favs.some(f => f.text === q.text)) { favs.push(q); setFavorites(favs); }
+  }
+  function removeFavorite(quoteText) {
+    setFavorites(getFavorites().filter(f => f.text !== quoteText));
+  }
+
+  // -- Show quote -------------------------------------------------------------
+  function showQuote(idx) {
+    const q = filteredQuotes[idx];
+    document.getElementById('quoteSpan').textContent = q.text;
+    document.getElementById('authorName').textContent = q.author;
+    document.getElementById('authorTitle').textContent = q.title;
+    document.getElementById('categoryLabel').textContent = q.category;
+    document.getElementById('counterNum').textContent =
+      String(idx + 1).padStart(2,'0') + ' / ' + String(filteredQuotes.length).padStart(2,'0');
+    updateHeartUI(q.text);
+  }
+
+  function updateHeartUI(quoteText) {
+    const heart = document.getElementById('heartIcon');
+    const label = document.getElementById('favLabel');
+    if (isFavorite(quoteText)) {
+      heart.style.fill = 'var(--gold)'; heart.style.stroke = 'var(--gold)';
+      label.textContent = 'Saved';
+    } else {
+      heart.style.fill = 'none'; heart.style.stroke = 'var(--gold)';
+      label.textContent = 'Save';
+    }
+  }
+
+  function toggleFavorite() {
+    const q = filteredQuotes[currentIndex];
+    if (isFavorite(q.text)) {
+      removeFavorite(q.text);
+      showToast('Removed from favorites');
+    } else {
+      addFavorite(q);
+      showToast('Saved to favorites');
+    }
+    updateHeartUI(q.text);
+  }
+
+  // -- Next quote -------------------------------------------------------------
+  function nextQuote() {
+    const container = document.getElementById('quoteContainer');
+    container.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+    container.style.opacity = '0';
+    container.style.transform = 'translateY(-20px)';
+    setTimeout(() => {
+      currentIndex = (currentIndex + 1) % filteredQuotes.length;
+      showQuote(currentIndex);
+      container.style.transition = 'none';
+      container.style.transform = 'translateY(20px)';
+      requestAnimationFrame(() => {
+        container.style.transition = 'opacity 0.5s cubic-bezier(0.22,1,0.36,1), transform 0.5s cubic-bezier(0.22,1,0.36,1)';
+        container.style.opacity = '1';
+        container.style.transform = 'translateY(0)';
+      });
+    }, 300);
+  }
+
+  // -- Categories -------------------------------------------------------------
+  const catContainer = document.getElementById('categoriesEl');
+  categories.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-pill';
+    btn.textContent = cat;
+    btn.onclick = () => filterCategory(cat, btn);
+    catContainer.appendChild(btn);
+  });
+
+  function filterCategory(cat, btn) {
+    const pills = document.querySelectorAll('.cat-pill');
+    if (activeCategory === cat) {
+      activeCategory = null; filteredQuotes = [...quotes];
+      pills.forEach(p => p.classList.remove('active'));
+    } else {
+      activeCategory = cat; filteredQuotes = quotes.filter(q => q.category === cat);
+      pills.forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+    }
+    currentIndex = 0; showQuote(currentIndex);
+  }
+
+  // -- Copy -------------------------------------------------------------------
+  function copyQuote() {
+    const q = filteredQuotes[currentIndex];
+    navigator.clipboard.writeText(`"${q.text}" — ${q.author}`).then(() => showToast('Copied to clipboard'));
+  }
+
+  // -- Toast ------------------------------------------------------------------
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  // -- Favorites panel --------------------------------------------------------
+  function openFavPanel() {
+    renderFavPanel();
+    document.getElementById('favPanel').classList.add('open');
+    document.getElementById('favOverlay').classList.add('open');
+  }
+  function closeFavPanel() {
+    document.getElementById('favPanel').classList.remove('open');
+    document.getElementById('favOverlay').classList.remove('open');
+  }
+  function renderFavPanel() {
+    const favs = getFavorites();
+    const list = document.getElementById('favList');
+    if (!favs.length) {
+      list.innerHTML = '<div class="fav-empty">No saved quotes yet</div>';
+      return;
+    }
+    list.innerHTML = favs.map((q, i) => `
+      <div class="fav-item" id="fav-item-${i}">
+        <div class="fav-item-text">${q.text}</div>
+        <div class="fav-item-author">${q.author}</div>
+        <div class="fav-item-actions">
+          <button class="fav-go-btn" onclick="goToQuote('${q.text.replace(/'/g,"\\'")}')">View ?</button>
+          <button class="fav-remove-btn" onclick="removeFavItem('${q.text.replace(/'/g,"\\'")}')">Remove</button>
+        </div>
+      </div>`).join('');
+  }
+  function removeFavItem(text) {
+    removeFavorite(text);
+    renderFavPanel();
+    updateHeartUI(filteredQuotes[currentIndex].text);
+  }
+  function goToQuote(text) {
+    const idx = filteredQuotes.findIndex(q => q.text === text);
+    if (idx !== -1) {
+      currentIndex = idx;
+      showQuote(currentIndex);
+    } else {
+      // reset filter and find
+      activeCategory = null; filteredQuotes = [...quotes];
+      document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+      const gi = filteredQuotes.findIndex(q => q.text === text);
+      if (gi !== -1) { currentIndex = gi; showQuote(currentIndex); }
+    }
+    closeFavPanel();
+  }
+
+  // -- Search -----------------------------------------------------------------
+  let searchOpen = false;
+  function toggleSearch() {
+    const wrap = document.getElementById('searchInputWrap');
+    const input = document.getElementById('searchInput');
+    if (!searchOpen) {
+      wrap.classList.add('open');
+      input.focus();
+      searchOpen = true;
+    } else {
+      if (input.value.trim()) {
+        runSearch(input.value.trim());
+      } else {
+        wrap.classList.remove('open');
+        searchOpen = false;
+      }
+    }
+  }
+  function closeSearch() {
+    document.getElementById('searchOverlay').classList.remove('open');
+    document.getElementById('searchInput').value = '';
+    document.getElementById('searchInputWrap').classList.remove('open');
+    searchOpen = false;
+  }
+  function runSearch(query) {
+    const q = query.toLowerCase();
+    const results = quotes.filter(item =>
+      item.text.toLowerCase().includes(q) ||
+      item.author.toLowerCase().includes(q) ||
+      item.category.toLowerCase().includes(q)
+    );
+    const info = document.getElementById('searchQueryInfo');
+    const list = document.getElementById('searchResultsList');
+    info.textContent = results.length
+      ? `${results.length} result${results.length > 1 ? 's' : ''} for "${query}"`
+      : `No results for "${query}"`;
+    if (!results.length) {
+      list.innerHTML = '<div class="no-results">No quotes found</div>';
+    } else {
+      list.innerHTML = results.map((item, i) => {
+        const highlighted = item.text.replace(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'), '<mark>$1</mark>');
+        const origIdx = quotes.indexOf(item);
+        return `<div class="search-result-item" onclick="selectSearchResult(${origIdx})">
+          <div class="result-text">${highlighted}</div>
+          <div class="result-meta">
+            <span class="result-author">${item.author}</span>
+            <span class="result-category">${item.category}</span>
+          </div>
+        </div>`;
+      }).join('');
+    }
+    document.getElementById('searchOverlay').classList.add('open');
+  }
+  function selectSearchResult(origIdx) {
+    activeCategory = null; filteredQuotes = [...quotes];
+    document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+    currentIndex = origIdx;
+    showQuote(currentIndex);
+    closeSearch();
+  }
+
+  // Live search on input
+  document.getElementById('searchInput').addEventListener('input', function() {
+    if (this.value.trim().length >= 2) runSearch(this.value.trim());
+    else if (!this.value.trim()) document.getElementById('searchOverlay').classList.remove('open');
+  });
+  document.getElementById('searchInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && this.value.trim()) { runSearch(this.value.trim()); }
+    if (e.key === 'Escape') { closeSearch(); }
+    e.stopPropagation(); // prevent triggering page keyboard shortcuts
+  });
+
+  // -- FIX 3: Keyboard nav — prevent spacebar page scroll --------------------
+  document.addEventListener('keydown', e => {
+    // Ignore if typing in search input
+    if (e.target.tagName === 'INPUT') return;
+    if (e.key === 'ArrowRight') { e.preventDefault(); nextQuote(); }
+    if (e.key === ' ') { e.preventDefault(); nextQuote(); } // preventDefault stops scroll
+    if (e.key === 'Escape') { closeSearch(); closeFavPanel(); }
+  });
+
+  // -- Init -------------------------------------------------------------------
+  showQuote(currentIndex);
+</script>
+</body>
+</html>
