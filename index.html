@@ -1,8 +1,9 @@
 <html lang="en">
 <head>
+ <meta name="google-site-verification" content="BB8x7Qrye35kp15xEcoKvogM8Hrkl4jZQ4ay7RH3Pog" />
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Luminary — Quote of the Day</title>
+<title>Luminary â€” Quote of the Day</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Cinzel:wght@400;600&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -380,7 +381,7 @@
   // -- Copy -------------------------------------------------------------------
   function copyQuote() {
     const q = filteredQuotes[currentIndex];
-    navigator.clipboard.writeText(`"${q.text}" — ${q.author}`).then(() => showToast('Copied to clipboard'));
+    navigator.clipboard.writeText(`"${q.text}" â€” ${q.author}`).then(() => showToast('Copied to clipboard'));
   }
 
   // -- Toast ------------------------------------------------------------------
@@ -509,7 +510,7 @@
     e.stopPropagation(); // prevent triggering page keyboard shortcuts
   });
 
-  // -- FIX 3: Keyboard nav — prevent spacebar page scroll --------------------
+  // -- FIX 3: Keyboard nav â€” prevent spacebar page scroll --------------------
   document.addEventListener('keydown', e => {
     // Ignore if typing in search input
     if (e.target.tagName === 'INPUT') return;
@@ -522,4 +523,5 @@
   showQuote(currentIndex);
 </script>
 </body>
+
 </html>
