@@ -9,7 +9,7 @@
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
     --ink: #0f0d0a; --parchment: #f5f0e8; --gold: #c9a84c;
-    --gold-light: #e8d08a; --cream: #faf7f2; --warm-gray: #8a8278; --deep: #1a1712;
+    --gold-light: #e8d08a; --cream: #faf7f2; --aqua: #8a8278; --deep: #1a1712;
   }
   html, body { height: 100%; background: var(--cream); color: var(--ink); font-family: 'Cormorant Garamond', Georgia, serif; overflow-x: hidden; cursor: none; }
   .cursor { width: 8px; height: 8px; background: var(--gold); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999; transform: translate(-50%,-50%); transition: transform 0.1s ease; }
@@ -31,7 +31,7 @@
   .search-input-wrap { width: 0; overflow: hidden; transition: width 0.4s cubic-bezier(0.22,1,0.36,1); }
   .search-input-wrap.open { width: 200px; }
   .search-input { width: 100%; background: none; border: none; border-bottom: 1px solid var(--gold); outline: none; font-family: 'Jost', sans-serif; font-size: 11px; letter-spacing: 0.15em; color: var(--ink); font-weight: 300; padding: 4px 0; cursor: text; }
-  .search-input::placeholder { color: var(--warm-gray); }
+  .search-input::placeholder { color: var(--blue); }
   .search-toggle-btn { background: none; border: none; cursor: none; opacity: 0.7; transition: opacity 0.3s; display: flex; align-items: center; }
   .search-toggle-btn:hover { opacity: 1; }
   .search-toggle-btn svg { width: 14px; height: 14px; stroke: var(--gold); stroke-width: 1.5; fill: none; }
@@ -525,6 +525,7 @@
 </body>
 
 </html>
+
 
 
 
